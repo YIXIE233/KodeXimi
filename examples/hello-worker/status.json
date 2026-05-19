@@ -1,0 +1,41 @@
+{
+  "schema_version": "0.1",
+  "task_id": "hello-worker",
+  "task_type": "hello",
+  "task_kind": "task",
+  "parent_task_id": null,
+  "state": "needs-review",
+  "controller": "codex",
+  "worker": "kimi",
+  "agent_file": "kimi/agents/codex-worker.yaml",
+  "plan_required": false,
+  "verify_required": true,
+  "allowed_reads": [
+    "TASK.md"
+  ],
+  "allowed_writes": [
+    "RESULT.md",
+    "VERIFY.md",
+    "logs/**"
+  ],
+  "forbidden_paths": [
+    "..",
+    ".env",
+    "secrets",
+    "credentials"
+  ],
+  "artifacts": [],
+  "logs": [
+    "logs/kimi.stdout.log",
+    "logs/kimi.stderr.log"
+  ],
+  "result_present": true,
+  "verify_present": true,
+  "notes": "",
+  "created_at": "sample",
+  "updated_at": "sample",
+  "started_at": "sample",
+  "completed_at": "sample"
+}
+
+

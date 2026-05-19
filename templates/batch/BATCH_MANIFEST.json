@@ -1,0 +1,28 @@
+{
+  "schema_version": "0.1",
+  "batch_id": "{{BATCH_NAME}}",
+  "state": "drafted",
+  "strategy": "serial",
+  "reason": "Alpha default: run tasks serially unless user explicitly sets max_parallel > 1 and write sets do not overlap.",
+  "max_parallel": 1,
+  "tasks": [
+    {
+      "task_id": "task-01",
+      "name": "task-01",
+      "dir": "tasks/task-01",
+      "task_type": "generic",
+      "depends_on": [],
+      "allowed_reads": ["TASK.md"],
+      "allowed_writes": ["RESULT.md", "VERIFY.md", "logs/**"],
+      "verify_required": true
+    }
+  ],
+  "conflict_policy": {
+    "overlapping_allowed_writes": "forbidden",
+    "same_file_parallel_edits": "forbidden",
+    "shared_module_changes": "codex_approval_required",
+    "forbidden_path_writes": "forbidden"
+  }
+}
+
+

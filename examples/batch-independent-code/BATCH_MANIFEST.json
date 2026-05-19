@@ -1,0 +1,51 @@
+{
+  "schema_version": "0.1",
+  "batch_id": "batch-independent-code",
+  "state": "drafted",
+  "strategy": "parallel",
+  "reason": "Two tasks write disjoint result files and logs.",
+  "max_parallel": 2,
+  "tasks": [
+    {
+      "task_id": "task-lint",
+      "name": "task-lint",
+      "dir": "tasks/task-lint",
+      "task_type": "code-change",
+      "depends_on": [],
+      "allowed_reads": [
+        "TASK.md"
+      ],
+      "allowed_writes": [
+        "RESULT.md",
+        "VERIFY.md",
+        "logs/**",
+        "lint-output.txt"
+      ],
+      "verify_required": true
+    },
+    {
+      "task_id": "task-docs",
+      "name": "task-docs",
+      "dir": "tasks/task-docs",
+      "task_type": "docs-change",
+      "depends_on": [],
+      "allowed_reads": [
+        "TASK.md"
+      ],
+      "allowed_writes": [
+        "RESULT.md",
+        "VERIFY.md",
+        "logs/**",
+        "docs-output.txt"
+      ],
+      "verify_required": true
+    }
+  ],
+  "conflict_policy": {
+    "overlapping_allowed_writes": "forbidden",
+    "same_file_parallel_edits": "forbidden",
+    "shared_module_changes": "codex_approval_required",
+    "forbidden_path_writes": "forbidden"
+  }
+}
+

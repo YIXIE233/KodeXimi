@@ -1,0 +1,15 @@
+{
+  "schema_version": "0.1",
+  "batch_id": "{{BATCH_NAME}}",
+  "state": "drafted",
+  "tasks_total": 0,
+  "tasks_completed": 0,
+  "tasks_failed": 0,
+  "created_at": "{{TIMESTAMP}}",
+  "updated_at": "{{TIMESTAMP}}",
+  "started_at": null,
+  "completed_at": null,
+  "notes": ""
+}
+
+

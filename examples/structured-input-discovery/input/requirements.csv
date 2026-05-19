@@ -1,0 +1,7 @@
+id,category,description,priority
+1,auth,Support OAuth2 login,high
+2,api,Add rate limiting,medium
+3,ui,Responsive mobile layout,high
+4,perf,Cache hot queries,low
+
+

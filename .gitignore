@@ -1,0 +1,26 @@
+# KodeXimi local/runtime files
+.kodeximi/
+*.backup-*.md
+
+# Runtime logs and locks
+logs/*.log
+*.log
+.running.lock
+
+# Python/cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local scratch output
+.tmp/
+tmp/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+
+

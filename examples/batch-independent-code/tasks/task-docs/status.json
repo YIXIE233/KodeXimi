@@ -1,0 +1,40 @@
+{
+  "schema_version": "0.1",
+  "task_id": "task-docs",
+  "task_type": "generic",
+  "task_kind": "task",
+  "parent_task_id": null,
+  "state": "drafted",
+  "controller": "codex",
+  "worker": "kimi",
+  "agent_file": "",
+  "plan_required": false,
+  "verify_required": true,
+  "allowed_reads": [
+    "TASK.md"
+  ],
+  "allowed_writes": [
+    "RESULT.md",
+    "VERIFY.md",
+    "logs/**"
+  ],
+  "forbidden_paths": [
+    "..",
+    ".env",
+    "secrets",
+    "credentials"
+  ],
+  "artifacts": [],
+  "logs": [
+    "logs/kimi.stdout.log",
+    "logs/kimi.stderr.log"
+  ],
+  "result_present": false,
+  "verify_present": false,
+  "notes": "",
+  "created_at": "",
+  "updated_at": "",
+  "started_at": null,
+  "completed_at": null
+}
+
