@@ -43,11 +43,12 @@ def run_wire_initialize(
 ) -> dict[str, object]:
     request = {
         "jsonrpc": "2.0",
-        "id": 1,
+        "id": "kodeximi-init-1",
         "method": "initialize",
         "params": {
-            "protocolVersion": protocol_version or "1.10",
-            "clientInfo": {"name": "kodeximi", "version": "0.1.0a0"},
+            "protocol_version": protocol_version or "1.10",
+            "client": {"name": "kodeximi", "version": "0.1.0a0"},
+            "capabilities": {"supports_question": True},
         },
     }
     started = time.monotonic()

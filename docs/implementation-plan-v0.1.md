@@ -29,6 +29,7 @@ Implementation proceeds in small committed slices.
 
 - Add Kimi `--wire` smoke scripts.
 - Add `kodeximi doctor --wire-smoke`.
+- Use Kimi Wire's snake_case initialize fields: `protocol_version`, `client`, and `capabilities`.
 - Treat `WIRE_INIT_TIMEOUT` as a hard integration blocker for real Kimi transport, not as a reason to fallback to `--print`.
 - Add WorkerEvent adapter.
 - Add approval dispatcher.

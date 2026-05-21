@@ -22,6 +22,8 @@ class WireSmokeTests(unittest.TestCase):
 
                     line = sys.stdin.readline()
                     request = json.loads(line)
+                    assert request["params"]["protocol_version"] == "1.10"
+                    assert request["params"]["client"]["name"] == "kodeximi"
                     print(json.dumps({"jsonrpc": "2.0", "id": request["id"], "result": {"protocolVersion": "1.10"}}), flush=True)
                     """
                 ).strip()
@@ -43,4 +45,3 @@ class WireSmokeTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
