@@ -6,7 +6,9 @@ from pathlib import Path
 
 from .config import kx_dir, require_project
 from .evidence import write_diff_summary, write_digest, write_usage
+from .errors import BoundaryViolation
 from .jsonio import write_json
+from .path_policy import PathPolicy
 from .snapshot import acquire_root_lock, release_root_lock, require_clean_worktree, write_post_diff, write_pre_status
 from .store import Store
 from .task_spec import TaskSpec, validate_task_spec
@@ -20,6 +22,20 @@ def _store(root: Path) -> Store:
 
 def new_job_id() -> str:
     return "job-" + uuid.uuid4().hex[:8]
+
+
+def audit_changed_files(root: Path, spec: TaskSpec, changed: list[dict[str, str]], attempt_dir: Path) -> list[dict[str, str]]:
+    policy = PathPolicy(root, spec)
+    violations: list[dict[str, str]] = []
+    for item in changed:
+        path = item.get("path", "")
+        try:
+            policy.check_write(path)
+        except BoundaryViolation as exc:
+            violations.append({"path": path, "status": item.get("status", ""), "reason": exc.message})
+    if violations:
+        write_json(attempt_dir / "boundary-violations.json", violations)
+    return violations
 
 
 def run_job(root: Path, spec: TaskSpec, *, transport: str = "fake") -> dict[str, object]:
@@ -57,10 +73,22 @@ def run_attempt(root: Path, spec: TaskSpec, job_id: str, attempt_no: int, *, tra
         if transport != "fake":
             raise NotImplementedError("Only fake transport is implemented in this skeleton.")
         (attempt_dir / "RESULT.md").write_text("# RESULT\n\nFakeTransport completed without business-file edits.\n", encoding="utf-8")
+        changed = write_post_diff(root, attempt_dir)
+        violations = audit_changed_files(root, spec, changed, attempt_dir)
+        if violations:
+            finished_at = utc_now()
+            store.execute(
+                "UPDATE attempts SET state=?,finished_at=?,error_code=?,error_message=? WHERE job_id=? AND attempt_no=?",
+                ("blocked", finished_at, "BOUNDARY_VIOLATION", f"{len(violations)} boundary violation(s)", job_id, attempt_no),
+            )
+            store.execute(
+                "UPDATE jobs SET state=?,updated_at=?,error_code=?,error_message=? WHERE job_id=?",
+                ("blocked", finished_at, "BOUNDARY_VIOLATION", f"{len(violations)} boundary violation(s)", job_id),
+            )
+            return {"ok": False, "error_code": "BOUNDARY_VIOLATION", "message": f"{len(violations)} boundary violation(s)", "job_id": job_id, "attempt_no": attempt_no, "attempt_dir": str(attempt_dir)}
         store.execute("UPDATE attempts SET state=? WHERE job_id=? AND attempt_no=?", ("verifying", job_id, attempt_no))
         verify = run_verification(root, attempt_dir, list(spec.verification.get("commands", [])))
         write_verify_files(attempt_dir, verify)
-        write_post_diff(root, attempt_dir)
         write_diff_summary(attempt_dir)
         duration_ms = int((time.monotonic() - start) * 1000)
         usage = write_usage(attempt_dir, duration_ms=duration_ms)

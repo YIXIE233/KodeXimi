@@ -60,6 +60,12 @@ User request
 
 `review decide --decision rework` only records the decision. A second attempt requires an explicit `kodeximi job rerun <job_id>` call. This prevents a review action from silently starting another worker mutation.
 
+## Boundary audit
+
+After a worker attempt, KodeXimi collects tracked and untracked project changes with `git status --porcelain=v1`. Changes under `.kodeximi/` are ignored because they are control-plane evidence.
+
+Every changed project path is checked against `write_policy`. If any changed path is outside the allowed write set or matches a hard denied pattern, the attempt is marked `blocked` with `BOUNDARY_VIOLATION`. Runtime verification is not run after a boundary violation.
+
 ## Parallel policy
 
 v0.1 forbids same-root parallel jobs. A project root has a `.kodeximi/run.lock`; only one active job may run in that root.

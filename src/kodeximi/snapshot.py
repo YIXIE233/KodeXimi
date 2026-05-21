@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+import json
 from pathlib import Path
 
 from .errors import DirtyWorktree, RootLocked
@@ -52,17 +53,26 @@ def write_pre_status(root: Path, attempt_dir: Path) -> None:
     (attempt_dir / "base_head.txt").write_text(head.stdout.strip() + "\n", encoding="utf-8")
 
 
-def write_post_diff(root: Path, attempt_dir: Path) -> None:
+def collect_changed_files(root: Path) -> list[dict[str, str]]:
+    proc = run_git(root, ["status", "--porcelain=v1"])
+    changed: list[dict[str, str]] = []
+    for line in proc.stdout.splitlines():
+        if not line:
+            continue
+        status = line[:2].strip() or line[:2]
+        path = line[3:] if len(line) > 3 else ""
+        if " -> " in path:
+            path = path.split(" -> ", 1)[1]
+        if path.startswith(".kodeximi/"):
+            continue
+        changed.append({"status": status, "path": path})
+    return changed
+
+
+def write_post_diff(root: Path, attempt_dir: Path) -> list[dict[str, str]]:
     (attempt_dir / "post_status.txt").write_text(git_status(root), encoding="utf-8")
     diff = run_git(root, ["diff", "--binary"])
     (attempt_dir / "patch.diff").write_text(diff.stdout, encoding="utf-8")
-    name_status = run_git(root, ["diff", "--name-status"])
-    changed = []
-    for line in name_status.stdout.splitlines():
-        parts = line.split("\t")
-        if len(parts) >= 2:
-            changed.append({"status": parts[0], "path": parts[-1]})
-    import json
-
+    changed = collect_changed_files(root)
     (attempt_dir / "changed-files.json").write_text(json.dumps(changed, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-
+    return changed
