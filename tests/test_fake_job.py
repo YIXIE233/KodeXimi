@@ -54,7 +54,9 @@ class FakeJobTests(unittest.TestCase):
             }
             spec_path = project / "task.json"
             spec_path.write_text(json.dumps(spec), encoding="utf-8")
-            # TaskSpec lives outside .kodeximi in this test, so add it before the clean check.
+            # init writes .gitignore and the TaskSpec lives outside .kodeximi in this test,
+            # so commit both before the clean-worktree preflight.
+            subprocess.run(["git", "add", ".gitignore"], cwd=str(project), check=True)
             subprocess.run(["git", "add", "task.json"], cwd=str(project), check=True)
             subprocess.run(["git", "-c", "user.email=test@example.com", "-c", "user.name=Test", "commit", "-m", "task"], cwd=str(project), check=True, capture_output=True)
             result = run_cli(project, "job", "run", "--from-json", str(spec_path))
@@ -66,4 +68,3 @@ class FakeJobTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
