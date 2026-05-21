@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 import uuid
 from pathlib import Path
+import subprocess
 
 from .config import kx_dir, require_project
 from .evidence import write_diff_summary, write_digest, write_usage
@@ -225,6 +226,26 @@ def cancel_job(root: Path, job_id: str) -> dict[str, object]:
     store.execute("UPDATE jobs SET state=?,updated_at=? WHERE job_id=?", ("cancelled", now, job_id))
     store.execute("UPDATE attempts SET state=?,finished_at=? WHERE job_id=? AND state IN ('preflight','running_worker','verifying','diffing')", ("cancelled", now, job_id))
     return {"ok": True, "job_id": job_id, "state": "cancelled"}
+
+
+def rollback_job(root: Path, job_id: str, attempt_no: int | None = None) -> dict[str, object]:
+    root = require_project(root)
+    store = _store(root)
+    attempts = store.query_all("SELECT * FROM attempts WHERE job_id=? ORDER BY attempt_no", (job_id,))
+    if not attempts:
+        return {"ok": False, "error_code": "JOB_NOT_FOUND", "message": f"unknown job: {job_id}"}
+    selected_no = attempt_no or int(attempts[-1]["attempt_no"])
+    attempt_dir = kx_dir(root) / "tasks" / job_id / "attempts" / f"{selected_no:03d}"
+    base_head_path = attempt_dir / "base_head.txt"
+    if not base_head_path.exists():
+        return {"ok": False, "error_code": "ROLLBACK_BASE_MISSING", "message": f"missing base_head.txt for attempt {selected_no:03d}"}
+    base_head = base_head_path.read_text(encoding="utf-8").strip()
+    proc = subprocess.run(["git", "-C", str(root), "reset", "--hard", base_head], capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if proc.returncode != 0:
+        return {"ok": False, "error_code": "ROLLBACK_FAILED", "message": proc.stderr.strip(), "job_id": job_id, "attempt_no": selected_no}
+    now = utc_now()
+    store.execute("UPDATE jobs SET state=?,updated_at=? WHERE job_id=?", ("rollback_done", now, job_id))
+    return {"ok": True, "job_id": job_id, "attempt_no": selected_no, "state": "rollback_done", "base_head": base_head}
 
 
 def job_status(root: Path, job_id: str) -> dict[str, object]:

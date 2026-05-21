@@ -17,6 +17,7 @@ kodeximi review decide job-xxxxxxxx --decision accepted --reason-file CODEX_REVI
 kodeximi review decide job-xxxxxxxx --decision rework --reason-file CODEX_REVIEW.md
 kodeximi job rerun job-xxxxxxxx --wait
 kodeximi job cancel job-xxxxxxxx
+kodeximi job rollback job-xxxxxxxx
 ```
 
 `review decide --decision rework` records the rework decision but does not automatically run another attempt.

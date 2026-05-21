@@ -142,5 +142,14 @@ class FakeJobTests(unittest.TestCase):
             result_text = (Path(result["attempt_dir"]) / "RESULT.md").read_text(encoding="utf-8")
             self.assertIn("FakeTransport inventory completed", result_text)
 
+    def test_rollback_resets_to_attempt_base_commit(self):
+        tmp, project, spec_path = self.make_project_with_task()
+        with tmp:
+            result = run_cli(project, "job", "run", "--from-json", str(spec_path))
+            (project / "src" / "a.py").write_text("print('dirty after attempt')\n", encoding="utf-8")
+            rollback = run_cli(project, "job", "rollback", result["job_id"])
+            self.assertEqual(rollback["state"], "rollback_done")
+            self.assertIn("print('ok')", (project / "src" / "a.py").read_text(encoding="utf-8"))
+
 if __name__ == "__main__":
     unittest.main()

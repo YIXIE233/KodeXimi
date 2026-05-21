@@ -7,7 +7,7 @@ from pathlib import Path
 from . import __version__
 from .config import doctor, init_project
 from .errors import KodeXimiError
-from .job import cancel_job, job_status, rerun_job, run_job
+from .job import cancel_job, job_status, rerun_job, rollback_job, run_job
 from .jsonio import print_json
 from .review import decide, package
 from .session import start_session, status_session, stop_session
@@ -74,6 +74,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_job_rerun.add_argument("--transport", choices=["fake", "kimi-wire"], default="fake")
     p_job_rerun.add_argument("--wait", action="store_true")
     p_job_rerun.set_defaults(func=lambda a: rerun_job(_cwd(a), a.job_id, transport=a.transport))
+    p_job_rollback = job_sub.add_parser("rollback")
+    p_job_rollback.add_argument("job_id")
+    p_job_rollback.add_argument("--cwd")
+    p_job_rollback.add_argument("--attempt-no", type=int)
+    p_job_rollback.set_defaults(func=lambda a: rollback_job(_cwd(a), a.job_id, a.attempt_no))
 
     p_review = sub.add_parser("review")
     review_sub = p_review.add_subparsers(dest="review_command", required=True)

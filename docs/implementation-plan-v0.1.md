@@ -47,6 +47,7 @@ Implementation proceeds in small committed slices.
 - Generate `REWORK_BRIEF.md` before a second attempt.
 - Enforce `max_attempts`.
 - Provide `review package`, `job rerun`, and `job cancel` CLI surfaces.
+- Provide `job rollback` for snapshot-backed direct mode.
 
 ## Phase 6: Codex plugin-lite
 
@@ -66,4 +67,5 @@ Implementation proceeds in small committed slices.
 - review decision is recorded.
 - review package returns the latest evidence paths.
 - rework rerun creates `REWORK_BRIEF.md`.
+- rollback can reset the project to the attempt base commit.
 - same-root lock prevents concurrent active jobs.
