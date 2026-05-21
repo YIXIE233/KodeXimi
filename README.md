@@ -108,8 +108,34 @@ uv tool install -e .
 或直接从仓库根目录运行：
 
 ```powershell
+$env:PYTHONPATH = "$PWD\src"
 python -m kodeximi --version
 ```
+
+当前 Python v0.1 已可用命令：
+
+```powershell
+$env:PYTHONPATH = "$PWD\src"
+python -m kodeximi init
+python -m kodeximi doctor
+python -m kodeximi doctor --wire-smoke
+python -m kodeximi session start --mode strict
+python -m kodeximi session status
+python -m kodeximi task validate --from-json task.json
+python -m kodeximi job run --from-json task.json --wait
+python -m kodeximi review package job-xxxxxxxx
+python -m kodeximi review decide job-xxxxxxxx --decision accepted --reason "reviewed"
+```
+
+开发验证：
+
+```powershell
+.\scripts\dev-test.ps1 -VerboseTests
+.\scripts\dev-doctor.ps1
+.\scripts\dev-doctor.ps1 -WireSmoke
+```
+
+注意：当前本机 `kimi info` 可显示 Kimi CLI 和 wire protocol，但 `kimi --wire` initialize 可能超时。`doctor --wire-smoke` 会把这个暴露为 `WIRE_INIT_TIMEOUT`。在该问题解决前，真实 `kimi-wire` transport 不启用，`--print` 也不会作为 fallback。
 
 ## Legacy PowerShell alpha 快速开始
 
