@@ -83,11 +83,40 @@ def main() -> int:
         print(job.stdout)
         if job.stderr:
             print(job.stderr, file=sys.stderr)
-        if job.returncode == 0:
-            print((project / "src" / "sample.py").read_text(encoding="utf-8"))
+        if job.returncode != 0:
+            return job.returncode
+        data = json.loads(job.stdout)
+        attempt_dir = Path(data["attempt_dir"])
+        sample_text = (project / "src" / "sample.py").read_text(encoding="utf-8")
+        print(sample_text)
+        required = [
+            attempt_dir / "RESULT.md",
+            attempt_dir / "VERIFY.md",
+            attempt_dir / "verify.json",
+            attempt_dir / "EVIDENCE_DIGEST.md",
+            attempt_dir / "diff-summary.md",
+            attempt_dir / "changed-files.json",
+            attempt_dir / "patch.diff",
+            attempt_dir / "usage.json",
+            attempt_dir / "wire.jsonl",
+        ]
+        missing = [str(path) for path in required if not path.exists()]
+        if missing:
+            print(json.dumps({"missing": missing}, indent=2), file=sys.stderr)
+            return 2
+        usage = json.loads((attempt_dir / "usage.json").read_text(encoding="utf-8"))
+        if usage.get("data_completeness") != "partial":
+            print(json.dumps({"bad_usage": usage}, indent=2), file=sys.stderr)
+            return 3
+        if "VALUE = 2" not in sample_text:
+            print(sample_text, file=sys.stderr)
+            return 4
+        package = run(project, "review", "package", data["job_id"], env=env)
+        print(package.stdout)
+        if package.returncode != 0:
+            return package.returncode
         return job.returncode
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
