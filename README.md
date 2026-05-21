@@ -137,6 +137,10 @@ python -m kodeximi review decide job-xxxxxxxx --decision accepted --reason "revi
 
 注意：当前本机 `kimi info` 可显示 Kimi CLI 和 wire protocol，但 `kimi --wire` initialize 可能超时。`doctor --wire-smoke` 会把这个暴露为 `WIRE_INIT_TIMEOUT`。在该问题解决前，真实 `kimi-wire` transport 不启用，`--print` 也不会作为 fallback。
 
+示例：
+
+- [`examples/v0.1-fake-code-edit`](examples/v0.1-fake-code-edit)：不调用 Kimi 的 v0.1 runtime fake job 示例，用于验证 TaskSpec、runtime VERIFY 和 evidence package。
+
 ## Legacy PowerShell alpha 快速开始
 
 在仓库根目录执行：
