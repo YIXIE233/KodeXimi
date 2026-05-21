@@ -36,6 +36,8 @@ class SessionCliTests(unittest.TestCase):
             subprocess.run(["git", "init"], cwd=str(project), check=True, capture_output=True)
             data = run_cli(project, "init")
             self.assertTrue(data["ok"])
+            doctor = run_cli(project, "doctor")
+            self.assertTrue(doctor["ok"])
             data = run_cli(project, "session", "start")
             self.assertEqual(data["codex_direct_execution"], "deny_by_default")
             status = run_cli(project, "session", "status")
@@ -44,4 +46,3 @@ class SessionCliTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
