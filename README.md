@@ -136,6 +136,8 @@ python -m kodeximi review decide job-xxxxxxxx --decision accepted --reason "revi
 .\scripts\dev-doctor.ps1 -WireSmoke
 ```
 
+`dev-doctor.ps1` 默认创建临时 git 项目并初始化 KodeXimi 后再检查；如果要检查源码仓库自身，使用 `.\scripts\dev-doctor.ps1 -RepoOnly`。
+
 注意：`doctor --wire-smoke` 会真实启动一次 `kimi --wire` 并发送 initialize。Kimi 1.44.0 本机初始化可能需要数秒；如果反复返回 `WIRE_INIT_TIMEOUT`，真实 `kimi-wire` transport 不启用，`--print` 也不会作为 fallback。
 
 示例：
