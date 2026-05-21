@@ -141,6 +141,15 @@ python -m kodeximi review decide job-xxxxxxxx --decision accepted --reason "revi
 
 - [`examples/v0.1-fake-code-edit`](examples/v0.1-fake-code-edit)：不调用 Kimi 的 v0.1 runtime fake job 示例，用于验证 TaskSpec、runtime VERIFY 和 evidence package。
 
+真实 Kimi Wire smoke：
+
+```powershell
+python .\scripts\spikes\wire_initialize.py
+python .\scripts\spikes\wire_inventory_job.py
+```
+
+`wire_inventory_job.py` 会创建临时 git 项目，初始化 KodeXimi，并运行一个 `inventory` job。它会实际调用 `kimi --wire`，因此需要本机 Kimi CLI 已登录且可用。
+
 ## Legacy PowerShell alpha 快速开始
 
 在仓库根目录执行：

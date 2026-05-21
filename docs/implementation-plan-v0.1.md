@@ -35,6 +35,7 @@ Implementation proceeds in small committed slices.
 - Add WorkerEvent adapter.
 - Add approval dispatcher.
 - Add minimal `kimi-wire` transport only after initialize smoke passes. It must archive `wire.jsonl`, reject Shell approvals, and require `RESULT.md`.
+- Keep `scripts/spikes/wire_inventory_job.py` as the real Kimi end-to-end smoke for inventory-only jobs.
 - Reject Kimi Shell.
 - Approve/reject writes by PathPolicy.
 - Persist `wire.jsonl` and approval decisions.
