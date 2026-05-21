@@ -1,0 +1,88 @@
+from __future__ import annotations
+
+import json
+import time
+import uuid
+from pathlib import Path
+
+from .config import kx_dir, require_project
+from .evidence import write_diff_summary, write_digest, write_usage
+from .jsonio import write_json
+from .snapshot import acquire_root_lock, release_root_lock, require_clean_worktree, write_post_diff, write_pre_status
+from .store import Store
+from .task_spec import TaskSpec
+from .timeutil import utc_now
+from .verification import run_verification, write_verify_files
+
+
+def _store(root: Path) -> Store:
+    return Store(kx_dir(root) / "kodeximi.sqlite")
+
+
+def new_job_id() -> str:
+    return "job-" + uuid.uuid4().hex[:8]
+
+
+def run_job(root: Path, spec: TaskSpec, *, transport: str = "fake") -> dict[str, object]:
+    root = require_project(root)
+    store = _store(root)
+    store.init_schema()
+    job_id = new_job_id()
+    now = utc_now()
+    store.execute(
+        "INSERT INTO jobs(job_id,state,task_type,goal,created_at,updated_at) VALUES(?,?,?,?,?,?)",
+        (job_id, "created", spec.task_type, spec.goal, now, now),
+    )
+    return run_attempt(root, spec, job_id, 1, transport=transport)
+
+
+def run_attempt(root: Path, spec: TaskSpec, job_id: str, attempt_no: int, *, transport: str = "fake") -> dict[str, object]:
+    store = _store(root)
+    base = kx_dir(root)
+    job_dir = base / "tasks" / job_id
+    attempt_dir = job_dir / "attempts" / f"{attempt_no:03d}"
+    attempt_dir.mkdir(parents=True, exist_ok=True)
+    write_json(job_dir / "task-spec.normalized.json", spec.raw)
+    started_at = utc_now()
+    store.execute(
+        "INSERT OR REPLACE INTO attempts(job_id,attempt_no,state,started_at) VALUES(?,?,?,?)",
+        (job_id, attempt_no, "preflight", started_at),
+    )
+    lock = None
+    start = time.monotonic()
+    try:
+        require_clean_worktree(root)
+        lock = acquire_root_lock(base, job_id)
+        write_pre_status(root, attempt_dir)
+        store.execute("UPDATE attempts SET state=? WHERE job_id=? AND attempt_no=?", ("running_worker", job_id, attempt_no))
+        if transport != "fake":
+            raise NotImplementedError("Only fake transport is implemented in this skeleton.")
+        (attempt_dir / "RESULT.md").write_text("# RESULT\n\nFakeTransport completed without business-file edits.\n", encoding="utf-8")
+        store.execute("UPDATE attempts SET state=? WHERE job_id=? AND attempt_no=?", ("verifying", job_id, attempt_no))
+        verify = run_verification(root, attempt_dir, list(spec.verification.get("commands", [])))
+        write_verify_files(attempt_dir, verify)
+        write_post_diff(root, attempt_dir)
+        write_diff_summary(attempt_dir)
+        duration_ms = int((time.monotonic() - start) * 1000)
+        usage = write_usage(attempt_dir, duration_ms=duration_ms)
+        write_digest(attempt_dir, job_id=job_id, attempt_no=attempt_no, verify=verify, usage=usage)
+        finished_at = utc_now()
+        store.execute(
+            "UPDATE attempts SET state=?,finished_at=?,duration_ms=?,verify_conclusion=?,usage_data_completeness=? WHERE job_id=? AND attempt_no=?",
+            ("needs_review", finished_at, duration_ms, verify["conclusion"], usage["data_completeness"], job_id, attempt_no),
+        )
+        store.execute("UPDATE jobs SET state=?,updated_at=? WHERE job_id=?", ("needs_review", finished_at, job_id))
+        return {"ok": True, "job_id": job_id, "attempt_no": attempt_no, "state": "needs_review", "attempt_dir": str(attempt_dir)}
+    finally:
+        release_root_lock(lock)
+
+
+def job_status(root: Path, job_id: str) -> dict[str, object]:
+    root = require_project(root)
+    store = _store(root)
+    job = store.query_one("SELECT * FROM jobs WHERE job_id=?", (job_id,))
+    if not job:
+        return {"ok": False, "error_code": "JOB_NOT_FOUND", "message": f"unknown job: {job_id}"}
+    attempts = store.query_all("SELECT * FROM attempts WHERE job_id=? ORDER BY attempt_no", (job_id,))
+    return {"ok": True, "job": job, "attempts": attempts}
+

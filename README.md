@@ -81,7 +81,37 @@ project/
 | `status.json` | 任务生命周期 | CLI / 复核关口 | 记录 `drafted`、`running`、`needs-review`、`failed` 等状态 |
 | `CODEX_REVIEW.md` | 复核关口 | 下一轮迭代 / 留档 | 记录接受、拒绝或返工意见 |
 
-## 快速开始
+## Python v0.1 runtime
+
+本仓库正在新增 Python v0.1 runtime。旧的 `cli/kodeximi.ps1` 保留为 alpha/reference，不再作为 v0.1 的实现主线。
+
+v0.1 目标：
+
+- 当前 Codex 会话可启动 `strict session mode`；
+- strict mode 下，Codex 默认不直接做 execution-plane 读写；
+- 单个 project root 内一次只跑一个 Kimi job；
+- KodeXimi runtime 负责 snapshot、runtime VERIFY、diff、usage 和 evidence digest；
+- Codex 基于 evidence 做 review decision。
+
+推荐阅读：
+
+- [`docs/architecture-v0.1.md`](docs/architecture-v0.1.md)
+- [`docs/implementation-plan-v0.1.md`](docs/implementation-plan-v0.1.md)
+- [`codex/plugin-lite/README.md`](codex/plugin-lite/README.md)
+
+开发安装：
+
+```powershell
+uv tool install -e .
+```
+
+或直接从仓库根目录运行：
+
+```powershell
+python -m kodeximi --version
+```
+
+## Legacy PowerShell alpha 快速开始
 
 在仓库根目录执行：
 
