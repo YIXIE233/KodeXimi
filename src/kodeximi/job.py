@@ -113,7 +113,13 @@ def run_attempt(root: Path, spec: TaskSpec, job_id: str, attempt_no: int, *, tra
         write_verify_files(attempt_dir, verify)
         write_diff_summary(attempt_dir)
         duration_ms = int((time.monotonic() - start) * 1000)
-        usage = write_usage(attempt_dir, duration_ms=duration_ms)
+        usage_payload = dict(worker_result.usage_payload)
+        usage = write_usage(
+            attempt_dir,
+            duration_ms=int(usage_payload.get("duration_ms") or duration_ms),
+            completeness="partial" if usage_payload else "missing",
+            payload=usage_payload,
+        )
         write_digest(attempt_dir, job_id=job_id, attempt_no=attempt_no, verify=verify, usage=usage)
         finished_at = utc_now()
         store.execute(

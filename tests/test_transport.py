@@ -29,6 +29,7 @@ class TransportTests(unittest.TestCase):
             )
             result = get_transport("fake").run(root=attempt_dir, attempt_dir=attempt_dir, spec=spec, job_id="job-test", attempt_no=1)
             self.assertEqual(result.status, "finished")
+            self.assertEqual(result.usage_payload["transport"], "fake")
             self.assertTrue((attempt_dir / "RESULT.md").exists())
 
     def test_kimi_wire_transport_registered(self):
