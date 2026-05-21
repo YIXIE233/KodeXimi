@@ -1,0 +1,41 @@
+{
+  "name": "kodeximi",
+  "version": "0.1.0-alpha",
+  "description": "Codex-first local delegation runtime protocol for Kimi CLI workers.",
+  "author": {
+    "name": "KodeXimi contributors",
+    "email": "noreply@example.com",
+    "url": "https://github.com/YIXIE233/KodeXimi"
+  },
+  "homepage": "https://github.com/YIXIE233/KodeXimi",
+  "repository": "https://github.com/YIXIE233/KodeXimi",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "kimi",
+    "delegation",
+    "runtime"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "KodeXimi",
+    "shortDescription": "Delegate execution-plane work from Codex to Kimi through KodeXimi.",
+    "longDescription": "KodeXimi plugin-lite gives Codex strict-session instructions, TaskSpec guidance, and review rules for using the local KodeXimi CLI runtime. It is not a hard hook.",
+    "developerName": "KodeXimi contributors",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/YIXIE233/KodeXimi",
+    "privacyPolicyURL": "https://github.com/YIXIE233/KodeXimi",
+    "termsOfServiceURL": "https://github.com/YIXIE233/KodeXimi",
+    "defaultPrompt": [
+      "初始化当前会话 KodeXimi strict mode。",
+      "用 KodeXimi 处理这个执行型任务。",
+      "退出当前会话 KodeXimi 模式。"
+    ],
+    "brandColor": "#2563EB"
+  }
+}
+

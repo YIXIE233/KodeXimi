@@ -1,0 +1,21 @@
+{
+  "name": "kodeximi-local",
+  "interface": {
+    "displayName": "KodeXimi Local"
+  },
+  "plugins": [
+    {
+      "name": "kodeximi",
+      "source": {
+        "source": "local",
+        "path": "./plugins/kodeximi"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
+

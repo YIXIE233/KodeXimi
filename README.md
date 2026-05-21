@@ -98,6 +98,7 @@ v0.1 目标：
 - [`docs/architecture-v0.1.md`](docs/architecture-v0.1.md)
 - [`docs/implementation-plan-v0.1.md`](docs/implementation-plan-v0.1.md)
 - [`codex/plugin-lite/README.md`](codex/plugin-lite/README.md)
+- [`.agents/plugins/kodeximi`](.agents/plugins/kodeximi)：repo-local Codex plugin-lite scaffold，提供 strict-session skill。
 
 开发安装：
 
