@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import time
 import uuid
 from pathlib import Path
@@ -10,7 +9,7 @@ from .evidence import write_diff_summary, write_digest, write_usage
 from .jsonio import write_json
 from .snapshot import acquire_root_lock, release_root_lock, require_clean_worktree, write_post_diff, write_pre_status
 from .store import Store
-from .task_spec import TaskSpec
+from .task_spec import TaskSpec, validate_task_spec
 from .timeutil import utc_now
 from .verification import run_verification, write_verify_files
 
@@ -77,6 +76,101 @@ def run_attempt(root: Path, spec: TaskSpec, job_id: str, attempt_no: int, *, tra
         release_root_lock(lock)
 
 
+def _load_job_spec(root: Path, job_id: str) -> TaskSpec:
+    spec_path = kx_dir(root) / "tasks" / job_id / "task-spec.normalized.json"
+    if not spec_path.exists():
+        from .errors import TaskSpecMissing
+
+        raise TaskSpecMissing(f"missing normalized TaskSpec for job: {job_id}")
+    import json
+
+    return validate_task_spec(json.loads(spec_path.read_text(encoding="utf-8")))
+
+
+def write_rework_brief(root: Path, job_id: str, next_attempt_no: int) -> Path:
+    job_dir = kx_dir(root) / "tasks" / job_id
+    previous_attempt_no = next_attempt_no - 1
+    previous_dir = job_dir / "attempts" / f"{previous_attempt_no:03d}"
+    review_path = job_dir / "CODEX_REVIEW.md"
+    verify_path = previous_dir / "VERIFY.md"
+    diff_path = previous_dir / "diff-summary.md"
+
+    def read_if_exists(path: Path, limit: int = 8000) -> str:
+        if not path.exists():
+            return ""
+        text = path.read_text(encoding="utf-8")
+        if len(text) > limit:
+            return text[: limit // 2] + "\n...[truncated]...\n" + text[-limit // 2 :]
+        return text
+
+    next_dir = job_dir / "attempts" / f"{next_attempt_no:03d}"
+    next_dir.mkdir(parents=True, exist_ok=True)
+    brief_path = next_dir / "REWORK_BRIEF.md"
+    brief = [
+        "# REWORK BRIEF",
+        "",
+        f"Job: `{job_id}`",
+        f"Previous attempt: `{previous_attempt_no:03d}`",
+        f"Next attempt: `{next_attempt_no:03d}`",
+        "",
+        "## Codex Review",
+        "",
+        read_if_exists(review_path) or "No CODEX_REVIEW.md found.",
+        "",
+        "## Previous Verification",
+        "",
+        read_if_exists(verify_path) or "No VERIFY.md found.",
+        "",
+        "## Previous Diff Summary",
+        "",
+        read_if_exists(diff_path) or "No diff-summary.md found.",
+        "",
+        "## Worker instruction",
+        "",
+        "- Fix only the issues identified above.",
+        "- Do not expand scope.",
+        "- Preserve correct work from the previous attempt when applicable.",
+        "- Write a fresh RESULT.md for this attempt.",
+    ]
+    brief_path.write_text("\n".join(brief).rstrip() + "\n", encoding="utf-8")
+    return brief_path
+
+
+def rerun_job(root: Path, job_id: str, *, transport: str = "fake") -> dict[str, object]:
+    root = require_project(root)
+    store = _store(root)
+    job = store.query_one("SELECT * FROM jobs WHERE job_id=?", (job_id,))
+    if not job:
+        return {"ok": False, "error_code": "JOB_NOT_FOUND", "message": f"unknown job: {job_id}"}
+    if job["state"] != "rework_requested":
+        return {"ok": False, "error_code": "JOB_NOT_REWORK_REQUESTED", "message": "job must be in rework_requested state before rerun"}
+    spec = _load_job_spec(root, job_id)
+    attempts = store.query_all("SELECT * FROM attempts WHERE job_id=? ORDER BY attempt_no", (job_id,))
+    next_attempt_no = len(attempts) + 1
+    if next_attempt_no > spec.max_attempts:
+        now = utc_now()
+        store.execute("UPDATE jobs SET state=?,updated_at=?,error_code=?,error_message=? WHERE job_id=?", ("blocked", now, "REWORK_LIMIT_REACHED", "max_attempts reached", job_id))
+        return {"ok": False, "error_code": "REWORK_LIMIT_REACHED", "message": "max_attempts reached", "job_id": job_id}
+    brief = write_rework_brief(root, job_id, next_attempt_no)
+    result = run_attempt(root, spec, job_id, next_attempt_no, transport=transport)
+    result["rework_brief"] = str(brief)
+    return result
+
+
+def cancel_job(root: Path, job_id: str) -> dict[str, object]:
+    root = require_project(root)
+    store = _store(root)
+    job = store.query_one("SELECT * FROM jobs WHERE job_id=?", (job_id,))
+    if not job:
+        return {"ok": False, "error_code": "JOB_NOT_FOUND", "message": f"unknown job: {job_id}"}
+    if job["state"] not in {"created", "preflight", "snapshotting", "running_worker", "verifying", "diffing"}:
+        return {"ok": False, "error_code": "JOB_NOT_ACTIVE", "message": f"job is not active: {job['state']}", "job_id": job_id, "state": job["state"]}
+    now = utc_now()
+    store.execute("UPDATE jobs SET state=?,updated_at=? WHERE job_id=?", ("cancelled", now, job_id))
+    store.execute("UPDATE attempts SET state=?,finished_at=? WHERE job_id=? AND state IN ('preflight','running_worker','verifying','diffing')", ("cancelled", now, job_id))
+    return {"ok": True, "job_id": job_id, "state": "cancelled"}
+
+
 def job_status(root: Path, job_id: str) -> dict[str, object]:
     root = require_project(root)
     store = _store(root)
@@ -85,4 +179,3 @@ def job_status(root: Path, job_id: str) -> dict[str, object]:
         return {"ok": False, "error_code": "JOB_NOT_FOUND", "message": f"unknown job: {job_id}"}
     attempts = store.query_all("SELECT * FROM attempts WHERE job_id=? ORDER BY attempt_no", (job_id,))
     return {"ok": True, "job": job, "attempts": attempts}
-

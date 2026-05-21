@@ -58,9 +58,10 @@ User request
   -> accepted / rework / failed / blocked
 ```
 
+`review decide --decision rework` only records the decision. A second attempt requires an explicit `kodeximi job rerun <job_id>` call. This prevents a review action from silently starting another worker mutation.
+
 ## Parallel policy
 
 v0.1 forbids same-root parallel jobs. A project root has a `.kodeximi/run.lock`; only one active job may run in that root.
 
 Multi-root parallelism is allowed when the user explicitly requests it. Each root must have an independent `.kodeximi` state directory, evidence package, and root lock.
-

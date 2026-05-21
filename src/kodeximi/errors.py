@@ -22,6 +22,10 @@ class TaskSpecInvalid(KodeXimiError):
     code = "TASKSPEC_INVALID"
 
 
+class TaskSpecMissing(KodeXimiError):
+    code = "TASKSPEC_MISSING"
+
+
 class ProjectNotInitialized(KodeXimiError):
     code = "PROJECT_NOT_INITIALIZED"
 
@@ -44,4 +48,3 @@ class VerificationTimeout(KodeXimiError):
 
 class BoundaryViolation(KodeXimiError):
     code = "BOUNDARY_VIOLATION"
-

@@ -7,9 +7,9 @@ from pathlib import Path
 from . import __version__
 from .config import doctor, init_project
 from .errors import KodeXimiError
-from .job import job_status, run_job
+from .job import cancel_job, job_status, rerun_job, run_job
 from .jsonio import print_json
-from .review import decide
+from .review import decide, package
 from .session import start_session, status_session, stop_session
 from .task_spec import load_task_spec, validate_task_spec
 
@@ -63,9 +63,23 @@ def build_parser() -> argparse.ArgumentParser:
     p_job_status.add_argument("job_id")
     p_job_status.add_argument("--cwd")
     p_job_status.set_defaults(func=lambda a: job_status(_cwd(a), a.job_id))
+    p_job_cancel = job_sub.add_parser("cancel")
+    p_job_cancel.add_argument("job_id")
+    p_job_cancel.add_argument("--cwd")
+    p_job_cancel.set_defaults(func=lambda a: cancel_job(_cwd(a), a.job_id))
+    p_job_rerun = job_sub.add_parser("rerun")
+    p_job_rerun.add_argument("job_id")
+    p_job_rerun.add_argument("--cwd")
+    p_job_rerun.add_argument("--transport", choices=["fake", "kimi-wire"], default="fake")
+    p_job_rerun.add_argument("--wait", action="store_true")
+    p_job_rerun.set_defaults(func=lambda a: rerun_job(_cwd(a), a.job_id, transport=a.transport))
 
     p_review = sub.add_parser("review")
     review_sub = p_review.add_subparsers(dest="review_command", required=True)
+    p_review_package = review_sub.add_parser("package")
+    p_review_package.add_argument("job_id")
+    p_review_package.add_argument("--cwd")
+    p_review_package.set_defaults(func=lambda a: package(_cwd(a), a.job_id))
     p_review_decide = review_sub.add_parser("decide")
     p_review_decide.add_argument("job_id")
     p_review_decide.add_argument("--cwd")
@@ -93,4 +107,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv[1:]))
-

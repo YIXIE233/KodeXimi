@@ -10,6 +10,37 @@ from .timeutil import utc_now
 VALID_DECISIONS = {"accepted", "rework", "failed", "blocked"}
 
 
+def package(root: Path, job_id: str) -> dict[str, object]:
+    root = require_project(root)
+    store = Store(kx_dir(root) / "kodeximi.sqlite")
+    job = store.query_one("SELECT * FROM jobs WHERE job_id=?", (job_id,))
+    if not job:
+        return {"ok": False, "error_code": "JOB_NOT_FOUND", "message": f"unknown job: {job_id}"}
+    attempts = store.query_all("SELECT * FROM attempts WHERE job_id=? ORDER BY attempt_no", (job_id,))
+    if not attempts:
+        return {"ok": False, "error_code": "ATTEMPT_NOT_FOUND", "message": f"job has no attempts: {job_id}"}
+    latest = attempts[-1]
+    attempt_no = int(latest["attempt_no"])
+    attempt_dir = kx_dir(root) / "tasks" / job_id / "attempts" / f"{attempt_no:03d}"
+    files = {
+        "evidence_digest": attempt_dir / "EVIDENCE_DIGEST.md",
+        "result": attempt_dir / "RESULT.md",
+        "verify": attempt_dir / "VERIFY.md",
+        "verify_json": attempt_dir / "verify.json",
+        "diff_summary": attempt_dir / "diff-summary.md",
+        "changed_files": attempt_dir / "changed-files.json",
+        "patch": attempt_dir / "patch.diff",
+        "usage": attempt_dir / "usage.json",
+    }
+    return {
+        "ok": True,
+        "job": job,
+        "latest_attempt": latest,
+        "attempt_dir": str(attempt_dir),
+        "files": {name: str(path) for name, path in files.items() if path.exists()},
+    }
+
+
 def decide(root: Path, job_id: str, decision: str, reason_text: str | None = None, reason_file: Path | None = None) -> dict[str, object]:
     root = require_project(root)
     if decision not in VALID_DECISIONS:
@@ -35,4 +66,3 @@ def decide(root: Path, job_id: str, decision: str, reason_text: str | None = Non
         old = log_path.read_text(encoding="utf-8") if log_path.exists() else "# REWORK LOG\n\n"
         log_path.write_text(old.rstrip() + f"\n\n## Attempt {attempt_no}\n\n{reason_text or ''}\n", encoding="utf-8")
     return {"ok": True, "job_id": job_id, "attempt_no": attempt_no, "decision": decision, "state": new_state}
-
