@@ -45,6 +45,8 @@ Codex may still perform control-plane work: understand the user request, ask cla
 
 Smallness is not an exception. Explicit user override is the only exception.
 
+When Codex lacks enough project context to create a safe `code_edit` TaskSpec, it must create an `inventory` task. Inventory tasks declare no business writes and ask Kimi to return candidate files and open questions in `RESULT.md`.
+
 ## Runtime flow
 
 ```text

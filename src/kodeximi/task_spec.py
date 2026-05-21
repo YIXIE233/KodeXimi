@@ -65,6 +65,10 @@ def validate_task_spec(data: Any) -> TaskSpec:
             raise TaskSpecInvalid(f"write_policy.{key} must be a string list.", field=f"write_policy.{key}")
     if any(item in {"", ".", "./"} for item in wp.get("modify_files", [])):
         raise TaskSpecInvalid("modify_files cannot contain project root.", field="write_policy.modify_files")
+    if task_type == "inventory":
+        writes = wp.get("modify_files", []) + wp.get("create_files", []) + wp.get("delete_files", []) + wp.get("allow_globs", [])
+        if writes:
+            raise TaskSpecInvalid("inventory tasks must not declare business writes.", field="write_policy")
     commands = (data.get("verification") or {}).get("commands", [])
     if not isinstance(commands, list):
         raise TaskSpecInvalid("verification.commands must be a list.", field="verification.commands")
@@ -86,4 +90,3 @@ def validate_task_spec(data: Any) -> TaskSpec:
             if not isinstance(argv, list) or not argv or not all(isinstance(item, str) for item in argv):
                 raise TaskSpecInvalid("argv must be a non-empty string list.", field=f"verification.commands[{index}].argv")
     return TaskSpec(data)
-

@@ -38,7 +38,21 @@ class TaskSpecTests(unittest.TestCase):
         with self.assertRaises(TaskSpecInvalid):
             validate_task_spec(data)
 
+    def test_inventory_rejects_business_writes(self):
+        data = self.base_spec()
+        data["task_type"] = "inventory"
+        data["write_policy"]["modify_files"] = ["src/a.py"]
+        with self.assertRaises(TaskSpecInvalid):
+            validate_task_spec(data)
+
+    def test_inventory_allows_no_business_writes(self):
+        data = self.base_spec()
+        data["task_type"] = "inventory"
+        data["write_policy"]["modify_files"] = []
+        data["verification"]["commands"] = []
+        spec = validate_task_spec(data)
+        self.assertEqual(spec.task_type, "inventory")
+
 
 if __name__ == "__main__":
     unittest.main()
-

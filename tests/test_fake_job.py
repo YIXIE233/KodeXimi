@@ -116,5 +116,31 @@ class FakeJobTests(unittest.TestCase):
             data = json.loads(proc.stdout)
             self.assertEqual(data["error_code"], "JOB_NOT_ACTIVE")
 
+    def test_inventory_job_reaches_needs_review_without_business_writes(self):
+        tmp, project, _ = self.make_project_with_task()
+        with tmp:
+            spec = {
+                "schema_version": "0.1",
+                "task_type": "inventory",
+                "goal": "find candidate files",
+                "write_policy": {
+                    "modify_files": [],
+                    "create_files": [],
+                    "delete_files": [],
+                    "allow_globs": [],
+                    "deny_globs": [],
+                },
+                "verification": {"commands": []},
+                "limits": {"max_attempts": 1},
+            }
+            spec_path = project / "inventory-task.json"
+            spec_path.write_text(json.dumps(spec), encoding="utf-8")
+            subprocess.run(["git", "add", "inventory-task.json"], cwd=str(project), check=True)
+            subprocess.run(["git", "-c", "user.email=test@example.com", "-c", "user.name=Test", "commit", "-m", "inventory-task"], cwd=str(project), check=True, capture_output=True)
+            result = run_cli(project, "job", "run", "--from-json", str(spec_path))
+            self.assertEqual(result["state"], "needs_review")
+            result_text = (Path(result["attempt_dir"]) / "RESULT.md").read_text(encoding="utf-8")
+            self.assertIn("FakeTransport inventory completed", result_text)
+
 if __name__ == "__main__":
     unittest.main()

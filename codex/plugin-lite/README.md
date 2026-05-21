@@ -31,3 +31,4 @@ Codex may:
 
 Explicit user override is required to bypass this mode.
 
+If Codex does not know which business files matter, it must create an `inventory` TaskSpec and let Kimi inspect the project. Codex must not perform the inventory by directly reading project files.
