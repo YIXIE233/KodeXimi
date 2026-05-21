@@ -34,6 +34,7 @@ Implementation proceeds in small committed slices.
 - Treat repeated `WIRE_INIT_TIMEOUT` as a hard integration blocker for real Kimi transport, not as a reason to fallback to `--print`.
 - Add WorkerEvent adapter.
 - Add approval dispatcher.
+- Add minimal `kimi-wire` transport only after initialize smoke passes. It must archive `wire.jsonl`, reject Shell approvals, and require `RESULT.md`.
 - Reject Kimi Shell.
 - Approve/reject writes by PathPolicy.
 - Persist `wire.jsonl` and approval decisions.

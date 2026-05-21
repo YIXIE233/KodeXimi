@@ -31,11 +31,9 @@ class TransportTests(unittest.TestCase):
             self.assertEqual(result.status, "finished")
             self.assertTrue((attempt_dir / "RESULT.md").exists())
 
-    def test_kimi_wire_transport_blocked_until_smoke_succeeds(self):
-        with self.assertRaises(NotImplementedError):
-            get_transport("kimi-wire")
+    def test_kimi_wire_transport_registered(self):
+        self.assertEqual(get_transport("kimi-wire").name, "kimi-wire")
 
 
 if __name__ == "__main__":
     unittest.main()
-
