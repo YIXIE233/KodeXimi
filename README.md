@@ -3,6 +3,21 @@
 KodeXimi 是一个轻量的本地任务流：你仍然正常和 Codex 对话，由 Codex 负责拆任务和复核，Kimi CLI 在后台执行有边界的工作，并用文件留下证据。
 
 
+
+## 设计研究与当前结论
+
+本仓库现在同时保存早期纯文件协议方案和后续 KodeXimi 设计研究。核心结论是：KodeXimi 不是多 agent OS，也不是 模型路由系统，而是 **Codex-first、Kimi-worker 的本地委托执行 runtime**。
+
+推荐阅读：
+
+- [`docs/research/2026-05-21-kodeximi-evolution.md`](docs/research/2026-05-21-kodeximi-evolution.md)：从早期方案到当前共识的演进。
+- [`docs/research/2026-05-21-v0.1-quality-core.md`](docs/research/2026-05-21-v0.1-quality-core.md)：第一版最小保质量设计。
+- [`docs/research/2026-05-21-product-design.md`](docs/research/2026-05-21-product-design.md)：完整产品形态。
+- [`docs/research/2026-05-21-conclusions-and-validation.md`](docs/research/2026-05-21-conclusions-and-validation.md)：关键结论与验证清单。
+- [`docs/research/2026-05-21-kodeximi-prior-art.md`](docs/research/2026-05-21-kodeximi-prior-art.md)：KodeXimi 相关参考项目与可借鉴内容。
+
+“coding harness 内部执行链路按 step 分配模型”是另一条独立研究线，已拆到私有仓库 `step-level-harness-routing-notes`；本仓库只在必要处提到它与 KodeXimi 的边界。
+
 ## 这是什么
 
 KodeXimi 的核心思路很简单：
@@ -296,3 +311,5 @@ Alpha 阶段故意不包含：
 ## License
 
 MIT — see `LICENSE`.
+
+
