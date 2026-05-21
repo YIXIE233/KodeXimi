@@ -13,6 +13,7 @@ from .snapshot import acquire_root_lock, release_root_lock, require_clean_worktr
 from .store import Store
 from .task_spec import TaskSpec, validate_task_spec
 from .timeutil import utc_now
+from .transport.registry import get_transport
 from .verification import run_verification, write_verify_files
 
 
@@ -70,9 +71,30 @@ def run_attempt(root: Path, spec: TaskSpec, job_id: str, attempt_no: int, *, tra
         lock = acquire_root_lock(base, job_id)
         write_pre_status(root, attempt_dir)
         store.execute("UPDATE attempts SET state=? WHERE job_id=? AND attempt_no=?", ("running_worker", job_id, attempt_no))
-        if transport != "fake":
-            raise NotImplementedError("Only fake transport is implemented in this skeleton.")
-        (attempt_dir / "RESULT.md").write_text("# RESULT\n\nFakeTransport completed without business-file edits.\n", encoding="utf-8")
+        worker = get_transport(transport)
+        worker_result = worker.run(root=root, attempt_dir=attempt_dir, spec=spec, job_id=job_id, attempt_no=attempt_no)
+        if worker_result.status != "finished":
+            finished_at = utc_now()
+            store.execute(
+                "UPDATE attempts SET state=?,finished_at=?,error_code=?,error_message=? WHERE job_id=? AND attempt_no=?",
+                ("worker_failed", finished_at, "WORKER_FAILED", worker_result.status, job_id, attempt_no),
+            )
+            store.execute(
+                "UPDATE jobs SET state=?,updated_at=?,error_code=?,error_message=? WHERE job_id=?",
+                ("failed", finished_at, "WORKER_FAILED", worker_result.status, job_id),
+            )
+            return {"ok": False, "error_code": "WORKER_FAILED", "message": worker_result.status, "job_id": job_id, "attempt_no": attempt_no}
+        if not (attempt_dir / "RESULT.md").exists():
+            finished_at = utc_now()
+            store.execute(
+                "UPDATE attempts SET state=?,finished_at=?,error_code=?,error_message=? WHERE job_id=? AND attempt_no=?",
+                ("worker_failed", finished_at, "RESULT_MISSING", "RESULT.md missing", job_id, attempt_no),
+            )
+            store.execute(
+                "UPDATE jobs SET state=?,updated_at=?,error_code=?,error_message=? WHERE job_id=?",
+                ("failed", finished_at, "RESULT_MISSING", "RESULT.md missing", job_id),
+            )
+            return {"ok": False, "error_code": "RESULT_MISSING", "message": "RESULT.md missing", "job_id": job_id, "attempt_no": attempt_no}
         changed = write_post_diff(root, attempt_dir)
         violations = audit_changed_files(root, spec, changed, attempt_dir)
         if violations:
