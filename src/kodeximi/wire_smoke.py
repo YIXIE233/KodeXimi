@@ -117,6 +117,12 @@ def run_wire_initialize(
                 proc.wait(timeout=2)
             except subprocess.TimeoutExpired:
                 proc.kill()
+        for stream in (proc.stdin, proc.stdout, proc.stderr):
+            try:
+                if stream:
+                    stream.close()
+            except Exception:
+                pass
 
 
 def smoke_system_kimi(cwd: Path, kimi_executable: str = "kimi") -> dict[str, object]:
@@ -124,4 +130,3 @@ def smoke_system_kimi(cwd: Path, kimi_executable: str = "kimi") -> dict[str, obj
     protocol = info.get("wire_protocol")
     result = run_wire_initialize([kimi_executable, "--wire"], cwd=cwd, protocol_version=protocol if isinstance(protocol, str) else None)
     return {"ok": bool(result.get("ok")), "kimi_info": info, "wire_initialize": result}
-
