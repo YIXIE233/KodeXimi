@@ -135,7 +135,7 @@ python -m kodeximi review decide job-xxxxxxxx --decision accepted --reason "revi
 .\scripts\dev-doctor.ps1 -WireSmoke
 ```
 
-注意：当前本机 `kimi info` 可显示 Kimi CLI 和 wire protocol，但 `kimi --wire` initialize 可能超时。`doctor --wire-smoke` 会把这个暴露为 `WIRE_INIT_TIMEOUT`。在该问题解决前，真实 `kimi-wire` transport 不启用，`--print` 也不会作为 fallback。
+注意：`doctor --wire-smoke` 会真实启动一次 `kimi --wire` 并发送 initialize。Kimi 1.44.0 本机初始化可能需要数秒；如果反复返回 `WIRE_INIT_TIMEOUT`，真实 `kimi-wire` transport 不启用，`--print` 也不会作为 fallback。
 
 示例：
 

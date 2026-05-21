@@ -38,7 +38,7 @@ def run_wire_initialize(
     command: list[str],
     *,
     cwd: Path,
-    timeout_seconds: float = 5.0,
+    timeout_seconds: float = 15.0,
     protocol_version: str | None = None,
 ) -> dict[str, object]:
     request = {
