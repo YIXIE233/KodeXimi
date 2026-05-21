@@ -146,9 +146,10 @@ python -m kodeximi review decide job-xxxxxxxx --decision accepted --reason "revi
 ```powershell
 python .\scripts\spikes\wire_initialize.py
 python .\scripts\spikes\wire_inventory_job.py
+python .\scripts\spikes\wire_code_edit_job.py
 ```
 
-`wire_inventory_job.py` 会创建临时 git 项目，初始化 KodeXimi，并运行一个 `inventory` job。它会实际调用 `kimi --wire`，因此需要本机 Kimi CLI 已登录且可用。
+`wire_inventory_job.py` 和 `wire_code_edit_job.py` 会创建临时 git 项目，初始化 KodeXimi，并实际调用 `kimi --wire`，因此需要本机 Kimi CLI 已登录且可用。
 
 ## Legacy PowerShell alpha 快速开始
 
