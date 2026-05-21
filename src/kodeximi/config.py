@@ -91,7 +91,7 @@ def init_project(cwd: Path) -> dict[str, object]:
     return {"ok": True, "project_root": str(root), "kodeximi_dir": str(base)}
 
 
-def doctor(cwd: Path) -> dict[str, object]:
+def doctor(cwd: Path, *, wire_smoke: bool = False) -> dict[str, object]:
     root = project_dir(cwd)
     base = kx_dir(root)
     checks: list[dict[str, object]] = []
@@ -111,5 +111,11 @@ def doctor(cwd: Path) -> dict[str, object]:
         add("git_repo", proc.returncode == 0 and proc.stdout.strip() == "true", proc.stderr.strip())
     add("worker_agent", (base / "agents" / "kodeximi-worker.yaml").exists(), str(base / "agents" / "kodeximi-worker.yaml"))
     add("sqlite", (base / "kodeximi.sqlite").exists(), str(base / "kodeximi.sqlite"))
-    return {"ok": all(bool(item["ok"]) for item in checks if item["name"] != "kimi_cli"), "checks": checks}
+    result: dict[str, object] = {"ok": all(bool(item["ok"]) for item in checks if item["name"] != "kimi_cli"), "checks": checks}
+    if wire_smoke and kimi:
+        from .wire_smoke import smoke_system_kimi
 
+        smoke = smoke_system_kimi(root, kimi)
+        result["wire_smoke"] = smoke
+        result["ok"] = bool(result["ok"]) and bool(smoke.get("ok"))
+    return result

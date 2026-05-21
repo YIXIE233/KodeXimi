@@ -29,7 +29,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_doctor = sub.add_parser("doctor")
     p_doctor.add_argument("--cwd")
-    p_doctor.set_defaults(func=lambda a: doctor(_cwd(a)))
+    p_doctor.add_argument("--wire-smoke", action="store_true")
+    p_doctor.set_defaults(func=lambda a: doctor(_cwd(a), wire_smoke=a.wire_smoke))
 
     p_session = sub.add_parser("session")
     session_sub = p_session.add_subparsers(dest="session_command", required=True)

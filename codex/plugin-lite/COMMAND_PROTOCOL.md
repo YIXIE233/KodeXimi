@@ -7,6 +7,7 @@ Use:
 ```powershell
 kodeximi init
 kodeximi doctor
+kodeximi doctor --wire-smoke
 kodeximi session start --mode strict
 kodeximi task validate --from-json task.json
 kodeximi job run --from-json task.json --wait

@@ -28,6 +28,7 @@ Implementation proceeds in small committed slices.
 ## Phase 4: RawWire transport
 
 - Add Kimi `--wire` smoke scripts.
+- Add `kodeximi doctor --wire-smoke`.
 - Add WorkerEvent adapter.
 - Add approval dispatcher.
 - Reject Kimi Shell.
