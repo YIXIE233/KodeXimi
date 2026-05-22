@@ -1,6 +1,6 @@
 ---
 name: kodeximi-strict-mode
-description: Use when the user asks to initialize or use KodeXimi in the current Codex session, or when KodeXimi strict mode is active. Enforces the plugin-lite behavior protocol: Codex plans and reviews; Kimi performs execution-plane work through the KodeXimi CLI.
+description: "Use when the user asks to initialize or use KodeXimi in the current Codex session, or when KodeXimi strict mode is active. Enforces the plugin-lite behavior protocol: Codex plans and reviews; Kimi performs execution-plane work through the KodeXimi CLI."
 ---
 
 # KodeXimi Strict Mode
